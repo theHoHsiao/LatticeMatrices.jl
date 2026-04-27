@@ -380,8 +380,8 @@ function exchange_dim!(ls::LatticeMatrix{D}, d::Int) where D
 
     bufSM, bufRM = ls.buf[iSM], ls.buf[iRM]      # minus side: send / recv
     bufSP, bufRP = ls.buf[iSP], ls.buf[iRP]      # plus  side: send / recv
-    bufSM_host, bufRM_host = ls.buf_host[iSM], ls.buf_host[iRM]      # minus side: send / recv
-    bufSP_host, bufRP_host = ls.buf_host[iSP], ls.buf_host[iRP]      # plus  side: send / recv
+    #bufSM_host, bufRM_host = ls.buf_host[iSM], ls.buf_host[iRM]      # minus side: send / recv
+    #bufSP_host, bufRP_host = ls.buf_host[iSP], ls.buf_host[iRP]      # plus  side: send / recv
 
     rankM, rankP = ls.nbr[d]                     # neighbour ranks
     me = ls.myrank
@@ -417,13 +417,13 @@ function exchange_dim!(ls::LatticeMatrix{D}, d::Int) where D
 
         cnt = length(bufSM)
 
-        #push!(reqs, MPI.Isend(bufSM, rankM, d, ls.cart))#;
-        copyto!(bufSM_host, bufSM)
-        push!(reqs, MPI.Isend(bufSM_host, rankM, d, ls.cart))#;
+        push!(reqs, MPI.Isend(bufSM, rankM, d, ls.cart))#;
+        #copyto!(bufSM_host, bufSM)
+        #push!(reqs, MPI.Isend(bufSM_host, rankM, d, ls.cart))#;
         #count=cnt, datatype=baseT))
 
-        #push!(reqs, MPI.Irecv!(bufRM, rankM, d + D, ls.cart))#;
-        push!(reqs, MPI.Irecv!(bufRM_host, rankM, d + D, ls.cart))#;
+        push!(reqs, MPI.Irecv!(bufRM, rankM, d + D, ls.cart))#;
+        #push!(reqs, MPI.Irecv!(bufRM_host, rankM, d + D, ls.cart))#;
         #count=cnt, datatype=baseT))
     end
 
@@ -441,13 +441,13 @@ function exchange_dim!(ls::LatticeMatrix{D}, d::Int) where D
 
         cnt = length(bufSP)
 
-        #push!(reqs, MPI.Isend(bufSP, rankP, d + D, ls.cart))#;
-        copyto!(bufSP_host, bufSP)
-        push!(reqs, MPI.Isend(bufSP_host, rankP, d + D, ls.cart))#;
+        push!(reqs, MPI.Isend(bufSP, rankP, d + D, ls.cart))#;
+        #copyto!(bufSP_host, bufSP)
+        #push!(reqs, MPI.Isend(bufSP_host, rankP, d + D, ls.cart))#;
 
         #count=cnt, datatype=baseT))
-        #push!(reqs, MPI.Irecv!(bufRP, rankP, d, ls.cart))
-        push!(reqs, MPI.Irecv!(bufRP_host, rankP, d, ls.cart))
+        push!(reqs, MPI.Irecv!(bufRP, rankP, d, ls.cart))
+        #push!(reqs, MPI.Irecv!(bufRP_host, rankP, d, ls.cart))
         #count=cnt, datatype=baseT))
     end
 
@@ -457,12 +457,12 @@ function exchange_dim!(ls::LatticeMatrix{D}, d::Int) where D
 
     # -------- copy received data into ghosts -----------
     if rankM != me
-        #copy!(gminus, bufRM)
-        copy!(gminus, bufRM_host)
+        copy!(gminus, bufRM)
+        #copy!(gminus, bufRM_host)
     end
     if rankP != me
-        #copy!(gplus, bufRP)
-        copy!(gplus, bufRP_host)
+        copy!(gplus, bufRP)
+        #copy!(gplus, bufRP_host)
     end
 end
 
