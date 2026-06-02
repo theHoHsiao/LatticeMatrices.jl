@@ -136,7 +136,7 @@ Base.@noinline function Shifted_Lattice_construct(data::TL, shift_in::TS) where 
     end
 
     sl0 = similar(data)
-    sl1 = similar(data)
+    sl1 = data.temps[1]
     substitute!(sl0, data)
 
     zeroT = ntuple(_ -> 0, D)
@@ -186,6 +186,7 @@ Base.@noinline function Shifted_Lattice_construct(data::TL, shift_in::TS) where 
         end
     end
 
+    unused!(data.temps, 1)
     zeroshift = ntuple(_ -> 0, D)
     return Shifted_Lattice(sl0, zeroshift, Val(D))
 end

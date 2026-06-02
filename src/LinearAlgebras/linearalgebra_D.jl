@@ -1254,13 +1254,13 @@ end
     end
 end
 
-function substitute!(C::LatticeMatrix{D,T1,AT1,NC1,NC2,nw,DI}, A::TA) where {D,T1,AT1,NC1,NC2,nw,DI,TA<:AbstractArray}
+function substitute_matrix!(C::LatticeMatrix{D,T1,AT1,NC1,NC2,nw,DI}, A::TA) where {D,T1,AT1,NC1,NC2,nw,DI,TA<:AbstractArray}
     n1, n2, nsize... = size(C.A)
     n1A, n2A, nsizeA... = size(A)
     @assert n1 == n1A && n2 == n2A "size of A is wrong!"
     @assert length(nsizeA) == D "dimension of A is wrong!"
     for i = 1:D
-        @assert nsize[i] == nsizeA[i] + 2nw "lattice size of A is wrong!"
+        @assert nsize[i] == nsizeA[i] + 2nw "lattice size of A is wrong! Expected size is $(nsize[i] + 2nw) but got $(nsizeA[i]) at dimension $i"
     end
     At = JACC.array(A)
 
@@ -1288,6 +1288,26 @@ function substitute!(C::LatticeMatrix{D,T1,AT1,NC1,NC2,nw,DI}, A::Shifted_Lattic
     shift = get_shift(A)
     JACC.parallel_for(
         prod(C.PN), kernel_4Dsubstitute_shift!, C.A, A.data.A, Val(NC1), Val(NC2), Val(nw), C.indexer, shift
+    )
+    #set_halo!(C)
+end
+function substitute!(C::AT1, A::LatticeMatrix{D,T1,AT1,NC1,NC2,nw,DI}) where {D,T1,AT1,NC1,NC2,nw,DI}
+    JACC.parallel_for(
+        prod(A.PN), kernel_4Dsubstitute!, C, A.A, Val(NC1), Val(NC2), Val(nw), A.indexer
+    )
+    #set_halo!(C)
+end
+function substitute!(C::LatticeMatrix{D,T1,AT1,NC1,NC2,nw,DI}, A::AT1) where {D,T1,AT1,NC1,NC2,nw,DI}
+    JACC.parallel_for(
+        prod(C.PN), kernel_4Dsubstitute!, C.A, A, Val(NC1), Val(NC2), Val(nw), C.indexer
+    )
+    #set_halo!(C)
+end
+function substitute!(C::AT1, A::Shifted_Lattice{L,D}) where {D,T1,AT1,NC1,NC2,nw,DI,
+    L<:LatticeMatrix{D,T1,AT1,NC1,NC2,nw,DI}}
+    shift = get_shift(A)
+    JACC.parallel_for(
+        prod(A.data.PN), kernel_4Dsubstitute_shift!, C, A.data.A, Val(NC1), Val(NC2), Val(nw), A.data.indexer, shift
     )
     #set_halo!(C)
 end
